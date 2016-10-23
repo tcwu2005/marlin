@@ -15,7 +15,7 @@ DTBIMAGE="dtb"
 DEFCONFIG="sharkey_defconfig"
 
 # Kernel Details
-VER=".R3.marlin."
+VER=".R4.marlin."
 
 # Paths
 KERNEL_DIR=`pwd`
