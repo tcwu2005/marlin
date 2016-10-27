@@ -2916,6 +2916,35 @@ exit:
 	return retval;
 }
 
+static int synaptics_rmi4_f12_configure_lpwg(
+		struct synaptics_rmi4_data *rmi4_data,
+		const struct synaptics_rmi4_fn *fhandler)
+{
+	int retval;
+	struct synaptics_rmi4_f12_ctrl_27 ctrl_27 = {
+		.double_tap_enable = 1,
+		.lpwg_report_rate = 20,
+		.false_activation_threshold = 3,
+		.maximum_active_duration = 12,
+		.timer_1_duration = 15,
+		.maximum_active_duration_timeout = 10,
+	};
+	const struct synaptics_rmi4_f12_extra_data *extra_data =
+		(const struct synaptics_rmi4_f12_extra_data *)fhandler->extra;
+
+	retval = synaptics_rmi4_reg_write(rmi4_data,
+		fhandler->full_addr.ctrl_base +
+			extra_data->ctrl27_offset,
+		ctrl_27.data,
+		sizeof(ctrl_27.data));
+	if (retval < 0)
+		dev_err(rmi4_data->pdev->dev.parent,
+				"%s: Failed to change lpwg settings\n",
+				__func__);
+
+	return retval;
+}
+
 static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		struct synaptics_rmi4_fn *fhandler,
 		struct synaptics_rmi4_fn_desc *fd,
@@ -3386,6 +3415,10 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 
 		printk("[TP]%s:Wakeup Gesture range (%d,%d) -> (%d,%d)\n", __func__,
 				double_tap[0], double_tap[1], double_tap[2], double_tap[3]);
+
+		retval = synaptics_rmi4_f12_configure_lpwg(rmi4_data, fhandler);
+		if (retval < 0)
+			return retval;
 	}
 
 	synaptics_rmi4_set_intr_mask(fhandler, fd, intr_count);
@@ -5010,6 +5043,7 @@ static int synaptics_rmi4_reinit_device(struct synaptics_rmi4_data *rmi4_data)
 		list_for_each_entry(fhandler, &rmi->support_fn_list, link) {
 			if (fhandler->fn_number == SYNAPTICS_RMI4_F12) {
 				synaptics_rmi4_f12_set_enables(rmi4_data, 0);
+				synaptics_rmi4_f12_configure_lpwg(rmi4_data, fhandler);
 				break;
 			}
 		}
