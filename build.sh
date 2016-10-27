@@ -151,7 +151,7 @@ export LOCALVERSION=~`echo $AK_VER`
 export LOCALVERSION=~`echo $AK_VER`
 export ARCH=arm64
 export SUBARCH=arm64
-export KBUILD_BUILD_USER=DespairFactor
+export KBUILD_BUILD_USER=mdalexca
 export KBUILD_BUILD_HOST=DarkRoom
 
 echo
