@@ -2416,7 +2416,6 @@ retry_find_task:
 			cset = task_css_set(tsk);
 			list_add(&cset->mg_node, &tset.src_csets);
 			ret = cgroup_allow_attach(cgrp, &tset);
-			list_del_init(&cset->mg_node);
 			if (ret) {
 				rcu_read_unlock();
 				goto out_unlock_cgroup;
@@ -2504,58 +2503,6 @@ static ssize_t cgroup_tasks_write(struct kernfs_open_file *of,
 {
 	return __cgroup_procs_write(of, buf, nbytes, off, false);
 }
-
-#ifdef CONFIG_CGROUP_SCHED
-int cgroup_attach_task_to_root(struct task_struct *tsk, int wait)
-{
-	int ret = 0;
-	struct cgroup *cgrp;
-	struct cgroup *root_cgrp = NULL;
-
-	if (!mutex_trylock(&cgroup_mutex)) {
-		/*This can be a case of recursion, so bail out */
-		if (!wait)
-			return -EBUSY;
-		mutex_lock(&cgroup_mutex);
-	}
-
-	cgrp = task_cgroup(tsk, cpu_cgrp_id);
-
-	if (cgrp && cgrp->root)
-		root_cgrp = &cgrp->root->cgrp;
-
-	if (root_cgrp && cgrp != root_cgrp)
-		cgrp = root_cgrp;
-	else
-		goto out_unlock_cgroup;
-
-	if (cgroup_is_dead(cgrp)) {
-		ret = -ENODEV;
-		goto out_unlock_cgroup;
-	}
-
-	rcu_read_lock();
-
-	get_task_struct(tsk);
-	rcu_read_unlock();
-
-	threadgroup_lock(tsk);
-
-	ret = cgroup_attach_task(cgrp, tsk, false);
-
-	threadgroup_unlock(tsk);
-
-	put_task_struct(tsk);
-out_unlock_cgroup:
-	mutex_unlock(&cgroup_mutex);
-	return ret;
-}
-#else
-int cgroup_attach_task_to_root(struct task_struct *tsk, int wait)
-{
-	return 0;
-}
-#endif
 
 static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
 				  char *buf, size_t nbytes, loff_t off)
