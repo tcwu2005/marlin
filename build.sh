@@ -12,10 +12,11 @@ clear
 THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 KERNEL="Image"
 DTBIMAGE="dtb"
+CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-6.x/bin/aarch64-linux-android-
 DEFCONFIG="sharkey_defconfig"
 
 # Kernel Details
-VER=".R13.marlin."
+VER=".R14.marlin."
 
 # Paths
 KERNEL_DIR=`pwd`
@@ -54,9 +55,7 @@ function make_dtb {
 }
 
 function make_boot {
-		cp -vr $ZIMAGE_DIR/Image.gz-dtb ~/android/marlin/out/zImage
-		
-		. appendramdisk.sh
+		cp -vr $ZIMAGE_DIR/Image.gz-dtb ~/android/marlin/out/kernel/zImage
 }
 
 
@@ -77,76 +76,10 @@ echo "Making sharkey Kernel:"
 echo "-----------------"
 echo -e "${restore}"
 
-while read -p "Do you want to use UBERTC(1-3) or Linaro(4-6)? " echoice
-do
-case "$echoice" in
-	1 )
-		export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-4.9-kernel/bin/aarch64-linux-android-
-		TC="UBER4.9"
-		echo
-		echo "Using UBERTC 4.9"
-		break
-		;;
-	2 )
-		export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-5.x-kernel/bin/aarch64-linux-android-
-		TC="UBER5.x"
-		echo
-		echo "Using UBERTC 5.x"
-		break
-		;;
-	3 )
-		export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-6.x-kernel/bin/aarch64-linux-android-
-		TC="UBER6.x"
-		echo
-		echo "Using UBERTC 6.x"
-		break
-		;;
-	4 )
-		export CROSS_COMPILE=${HOME}/android/linarobuild/out/aarch64-linux-android-4.9-kernel/bin/aarch64-linux-android-
-		TC="LINARO4.9"
-		echo
-		echo "Using Linaro 4.9"
-		break
-		;;
-	5 )
-		export CROSS_COMPILE=${HOME}/android/linarobuild/out/aarch64-linux-android-5.x-kernel/bin/aarch64-linux-android-
-		TC="LINARO5.x"
-		echo
-		echo "Using Linaro 5.x"
-		break
-		;;
-	6 )
-		export CROSS_COMPILE=${HOME}/android/linarobuild/out/aarch64-linux-android-6.x-kernel/bin/aarch64-linux-android-
-		TC="LINARO6.x"
-		echo
-		echo "Using Linaro 6.x"
-		break
-		;;
-	7 )
-		export CROSS_COMPILE=${HOME}/android/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-		TC="AOSP4.9"
-		echo
-		echo "Using AOSP 4.9"
-		break
-		;;
-	8 )
-		export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-7.0-kernel/bin/aarch64-linux-android-
-		TC="UBER7.0"
-		echo
-		echo "Using UBER 7.0"
-		break
-		;;
-	* )
-		echo
-		echo "Invalid try again!"
-		echo
-		;;
-esac
-done
 
 # Vars
 BASE_AK_VER="Sharkey"
-AK_VER="$BASE_AK_VER$VER$TC"
+AK_VER="$BASE_AK_VER$VER"
 export LOCALVERSION=~`echo $AK_VER`
 export LOCALVERSION=~`echo $AK_VER`
 export ARCH=arm64
