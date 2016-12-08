@@ -68,6 +68,7 @@
 #define REPORT_2D_PRESSURE
 #define TEMP_FORCE_WA
 /* #define USE_DATA_SERVER */
+#define USE_I2C_SWITCH
 
 
 #define F12_DATA_15_WORKAROUND
@@ -5771,7 +5772,6 @@ static void synaptics_rmi4_f12_wg(struct synaptics_rmi4_data *rmi4_data,
 {
 	int retval;
 	unsigned char reporting_control[3];
-	struct synaptics_rmi4_f12_ctrl_27 ctrl_27;
 	struct synaptics_rmi4_f12_extra_data *extra_data;
 	struct synaptics_rmi4_fn *fhandler;
 	struct synaptics_rmi4_device_info *rmi;
@@ -5797,47 +5797,10 @@ static void synaptics_rmi4_f12_wg(struct synaptics_rmi4_data *rmi4_data,
 		return;
 	}
 
-	retval = synaptics_rmi4_reg_read(rmi4_data,
-			fhandler->full_addr.ctrl_base +
-				extra_data->ctrl27_offset,
-			ctrl_27.data,
-			sizeof(ctrl_27.data));
-	if (retval < 0) {
-		dev_err(rmi4_data->pdev->dev.parent,
-				"%s: Failed to change lpwg settings\n",
-				__func__);
-		return;
-	}
-
-	if (enable) {
+	if (enable)
 		reporting_control[2] = F12_WAKEUP_GESTURE_MODE;
-		ctrl_27.double_tap_enable = 1;
-		ctrl_27.lpwg_report_rate = 20;
-		ctrl_27.false_activation_threshold = 3;
-		ctrl_27.maximum_active_duration = 12;
-		ctrl_27.timer_1_duration = 15;
-		ctrl_27.maximum_active_duration_timeout = 10;
-	} else {
+	else
 		reporting_control[2] = F12_CONTINUOUS_MODE;
-		ctrl_27.double_tap_enable = 0;
-		ctrl_27.lpwg_report_rate = 20;
-		ctrl_27.false_activation_threshold = 3;
-		ctrl_27.maximum_active_duration = 12;
-		ctrl_27.timer_1_duration = 15;
-		ctrl_27.maximum_active_duration_timeout = 10;
-	}
-
-	retval = synaptics_rmi4_reg_write(rmi4_data,
-			fhandler->full_addr.ctrl_base +
-				extra_data->ctrl27_offset,
-			ctrl_27.data,
-			sizeof(ctrl_27.data));
-	if (retval < 0) {
-		dev_err(rmi4_data->pdev->dev.parent,
-				"%s: Failed to change lpwg settings\n",
-				__func__);
-		return;
-	}
 
 	retval = synaptics_rmi4_reg_write(rmi4_data,
 			fhandler->full_addr.ctrl_base +
@@ -6013,6 +5976,13 @@ exit:
 	}
 	mutex_unlock(&exp_data.mutex);
 
+#ifdef USE_I2C_SWITCH
+	gpio_set_value(rmi4_data->hw_if->board_data->switch_gpio, 1);
+	dev_dbg(rmi4_data->pdev->dev.parent,
+		"%s: Switch I2C mux to sensor hub\n",
+		__func__);
+#endif // USE_I2C_SWITCH
+
 	rmi4_data->suspend = true;
 
 	return 0;
@@ -6028,6 +5998,13 @@ static int synaptics_rmi4_resume(struct device *dev)
 
 	if (rmi4_data->stay_awake)
 		return 0;
+
+#ifdef USE_I2C_SWITCH
+	gpio_set_value(rmi4_data->hw_if->board_data->switch_gpio, 0);
+	dev_dbg(rmi4_data->pdev->dev.parent,
+			"%s: Switch I2C mux to AP\n",
+			__func__);
+#endif // USE_I2C_SWITCH
 
 	synaptics_rmi4_free_fingers(rmi4_data);
 
@@ -6047,6 +6024,10 @@ static int synaptics_rmi4_resume(struct device *dev)
 	rmi4_data->current_page = MASK_8BIT;
 
 	synaptics_rmi4_sleep_enable(rmi4_data, false);
+#ifdef USE_I2C_SWITCH
+	synaptics_rmi4_wakeup_gesture(rmi4_data, false);
+	synaptics_rmi4_force_cal(rmi4_data);
+#endif
 	synaptics_rmi4_irq_enable(rmi4_data, true, false);
 
 exit:
