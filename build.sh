@@ -12,11 +12,11 @@ clear
 THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 KERNEL="Image"
 DTBIMAGE="dtb"
-CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-6.x/bin/aarch64-linux-android-
+export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-6.x/bin/aarch64-linux-android-
 DEFCONFIG="sharkey_defconfig"
 
 # Kernel Details
-VER=".R18.marlin"
+VER=".R20.NOEAS.marlin"
 
 # Paths
 KERNEL_DIR=`pwd`
