@@ -621,36 +621,7 @@ TRACE_EVENT(sched_freq_alert,
 		__field(	u64,	ps			)
 		__field(	u64,	new_load		)
 		__field(	u64,	old_pred		)
-		__field(TRACE_EVENT(sched_get_task_cpu_cycles,
-
-	TP_PROTO(int cpu, int event, u64 cycles, u32 exec_time),
-
-	TP_ARGS(cpu, event, cycles, exec_time),
-
-	TP_STRUCT__entry(
-		__field(int,		cpu		)
-		__field(int,		event		)
-		__field(u64,		cycles		)
-		__field(u64,		exec_time	)
-		__field(u32,		freq		)
-		__field(u32,		legacy_freq	)
-	),
-
-	TP_fast_assign(
-		__entry->cpu 		= cpu;
-		__entry->event 		= event;
-		__entry->cycles 	= cycles;
-		__entry->exec_time 	= exec_time;
-		__entry->freq 		= cpu_cycles_to_freq(cycles,
-							     exec_time);
-		__entry->legacy_freq 	= cpu_cur_freq(cpu);
-	),
-
-	TP_printk("cpu=%d event=%d cycles=%llu exec_time=%llu freq=%u legacy_freq=%u",
-		  __entry->cpu, __entry->event, __entry->cycles,
-		  __entry->exec_time, __entry->freq, __entry->legacy_freq)
-);
-	u64,	new_pred		)
+		__field(	u64,	new_pred		)
 	),
 
 	TP_fast_assign(
